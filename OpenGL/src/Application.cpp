@@ -5,7 +5,7 @@
 
 static unsigned int CompileShader(unsigned int type, const std::string& source)
 {
-    unsigned int id = glCreateShader(GL_VERTEX_SHADER);
+    unsigned int id = glCreateShader(type);
     const char* src = source.c_str();
     glShaderSource(id, 1, &src, nullptr);
     glCompileShader(id);
@@ -95,6 +95,30 @@ int main(void)
     );    // 当前attribute所在每个元素中的偏移量
 
 
+    std::string vertexShader =
+        "#version 330 core\n"
+        "\n"
+        "layout(location = 0) in vec4 position;\n"
+        "\n"
+        "void main()\n"
+        "{\n"
+        "   gl_Position = position;\n"
+        "}\n";
+
+	std::string fragmentShader =
+		"#version 330 core\n"
+		"\n"
+		"layout(location = 0) out vec4 color;\n"
+		"\n"
+		"void main()\n"
+		"{\n"
+		"   color = vec4(1.0, 0.0, 0.0, 1.0);\n"
+		"}\n";
+
+    unsigned int shader = CreateShader(vertexShader, fragmentShader);
+    glUseProgram(shader);
+
+
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
@@ -102,10 +126,7 @@ int main(void)
         glClear(GL_COLOR_BUFFER_BIT);
 
 
-
         glDrawArrays(GL_TRIANGLES, 0, 3);
-
-
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
@@ -113,6 +134,8 @@ int main(void)
         /* Poll for and process events */
         glfwPollEvents();
     }
+
+    glDeleteProgram(shader);
 
     glfwTerminate();
     return 0;
