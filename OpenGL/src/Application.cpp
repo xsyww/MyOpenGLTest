@@ -6,31 +6,10 @@
 #include <string>
 #include <sstream>
 
-#define ASSERT(x) if (!(x)) __debugbreak();
+#include "Renderer.h"
 
-#define GLCall(x) GLClearError();\
-    x;\
-    ASSERT(GLLogCall(#x, __FILE__, __LINE__))
-
-static void GLClearError()
-{
-    while (glGetError() != GL_NO_ERROR)
-        ;
-}
-
-static bool GLLogCall(const char* function, const char* file, int line)
-{
-    while (GLenum error = glGetError())
-    {
-        std::cout << "[OpenGL Error] " << error << std::endl
-            << "\tfunction: " << function << std::endl
-            << "\tline: " << line << std::endl
-            << "\tfile: "<< file << std::endl;
-        return false;
-    }
-
-    return true;
-}
+#include "VertexBuffer.h"
+#include "IndexBuffer.h"
 
 struct ShadeProgramSource
 {
@@ -144,87 +123,83 @@ int main(void)
 
     std::cout << "Program runs in openGL with version: " <<  glGetString(GL_VERSION) << std::endl;
 
-    float positions[] = {
-        -0.5f, -0.5f,
-         0.5f, -0.5f,
-         0.5f,  0.5f,
-        -0.5f,  0.5f,
-    };
+    {   // 这个作用域用来确保 vb，vi可以在 glfwTerminate() 之前释放掉
+        float positions[] = {
+            -0.5f, -0.5f,
+             0.5f, -0.5f,
+             0.5f,  0.5f,
+            -0.5f,  0.5f,
+        };
 
-    unsigned int vao;
-    GLCall(glGenVertexArrays(1, &vao));
-    GLCall(glBindVertexArray(vao));
+        unsigned int indices[] = {
+            0, 1, 2,
+            2, 3, 0
+        };
 
-    unsigned int vbid;    // buffer id
-    GLCall(glGenBuffers(1, &vbid));
-	GLCall(glBindBuffer(GL_ARRAY_BUFFER, vbid));
-	GLCall(glBufferData(GL_ARRAY_BUFFER, 4 * 2 * sizeof(float), positions, GL_STATIC_DRAW));
-
-	GLCall(glEnableVertexAttribArray(0));   // 启用attrbute
-	GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, (const void*)0));
-
-	unsigned int indices[] = {
-		0, 1, 2,
-		2, 3, 0
-	};
-
-	unsigned int ibid;    // buffer id
-    GLCall(glGenBuffers(1, &ibid));
-    GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibid));
-    GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indices, GL_STATIC_DRAW));
-
-    ShadeProgramSource source = ParseShader("res/shaders/Basic.shader");
-	unsigned int shader = CreateShader(source.VertexSource, source.FragmentSource);
-    GLCall(glUseProgram(shader));
-
-    GLCall(int colorParameterLocation = glGetUniformLocation(shader, "u_Color"));
-    ASSERT(colorParameterLocation != -1);
-
-    // unbind all
-    GLCall(glBindVertexArray(0));
-    GLCall(glUseProgram(0));
-    GLCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
-    GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
-
-
-    float r = 0.0f;
-    float increment = 0.05f;
-    /* Loop until the user closes the window */
-    while (!glfwWindowShouldClose(window))
-    {
-        /* Render here */
-        GLCall(glClear(GL_COLOR_BUFFER_BIT));
-
-        GLCall(glUseProgram(shader));
-        GLCall(glUniform4f(colorParameterLocation, r, 0.3f, 0.8f, 1.0f));
-
-        //GLCall(glBindBuffer(GL_ARRAY_BUFFER, vbid));
-
-        // 一下的两句必须每次设置，因为渲染多个物体时，可能会发生改变。
-		//GLCall(glEnableVertexAttribArray(0));   // 启用attrbute
-		//GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, (const void*)0));
-
+        unsigned int vao;
+        GLCall(glGenVertexArrays(1, &vao));
         GLCall(glBindVertexArray(vao));
 
-        GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibid));
+        VertexBuffer vb(positions, 4 * 2 * sizeof(float));
+
+        GLCall(glEnableVertexAttribArray(0));   // 启用attrbute
+        GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, (const void*)0));
 
 
-        GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));  // 这里必须是 UNSIGNED_INT
+        IndexBuffer ib(indices, 6);
 
-        if (r > 1.0f)
-            increment = -0.05f;
-        else if (r < 0.0f)
-            increment = 0.05f;
+        ShadeProgramSource source = ParseShader("res/shaders/Basic.shader");
+        unsigned int shader = CreateShader(source.VertexSource, source.FragmentSource);
+        GLCall(glUseProgram(shader));
 
-        r += increment;
-       
+        GLCall(int colorParameterLocation = glGetUniformLocation(shader, "u_Color"));
+        ASSERT(colorParameterLocation != -1);
 
-        /* Swap front and back buffers */
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-    }
+        // unbind all
+        GLCall(glBindVertexArray(0));
+        GLCall(glUseProgram(0));
+        GLCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
+        GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
-    GLCall(glDeleteProgram(shader));
+
+        float r = 0.0f;
+        float increment = 0.05f;
+        /* Loop until the user closes the window */
+        while (!glfwWindowShouldClose(window))
+        {
+            /* Render here */
+            GLCall(glClear(GL_COLOR_BUFFER_BIT));
+
+            GLCall(glUseProgram(shader));
+            GLCall(glUniform4f(colorParameterLocation, r, 0.3f, 0.8f, 1.0f));
+
+            //GLCall(glBindBuffer(GL_ARRAY_BUFFER, vbid));
+
+            // 一下的两句必须每次设置，因为渲染多个物体时，可能会发生改变。
+            //GLCall(glEnableVertexAttribArray(0));   // 启用attrbute
+            //GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, (const void*)0));
+
+            GLCall(glBindVertexArray(vao));
+
+            ib.Bind();
+
+            GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));  // 这里必须是 UNSIGNED_INT
+
+            if (r > 1.0f)
+                increment = -0.05f;
+            else if (r < 0.0f)
+                increment = 0.05f;
+
+            r += increment;
+
+
+            /* Swap front and back buffers */
+            glfwSwapBuffers(window);
+            glfwPollEvents();
+        }
+   
+        GLCall(glDeleteProgram(shader));
+    };
 
     glfwTerminate();
     return 0;
