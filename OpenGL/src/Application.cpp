@@ -115,25 +115,39 @@ int main(void)
 
     std::cout << "Program runs in openGL with version: " <<  glGetString(GL_VERSION) << std::endl;
 
-    float positions[6] = {
+    float positions[] = {
         -0.5f, -0.5f,
-         0.0f,  0.5f,
          0.5f, -0.5f,
+         0.5f,  0.5f,
+        -0.5f,  0.5f,
     };
 
-    unsigned int buffer;    // buffer id
-    glGenBuffers(1, &buffer);
-    glBindBuffer(GL_ARRAY_BUFFER, buffer);
-    glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(float), positions, GL_STATIC_DRAW);
+    unsigned int vbid;    // buffer id
+    glGenBuffers(1, &vbid);
+    glBindBuffer(GL_ARRAY_BUFFER, vbid);
+    glBufferData(GL_ARRAY_BUFFER, 6 * 2 * sizeof(float), positions, GL_STATIC_DRAW);
 
     glEnableVertexAttribArray(0);   // 启用attrbute
-    glVertexAttribPointer(0, // attribute id
-        2, // 取几个元素 本例中 x,y 两个
-        GL_FLOAT, // 每个元素是什么类型
-        GL_FALSE, // 是否要单位化
-        sizeof(float) * 2,  // 每个buffer元素的长度
-        (const void*)0
-    );    // 当前attribute所在每个元素中的偏移量
+    glVertexAttribPointer(0,    // attribute id
+        2,                      // 取几个元素 本例中 x,y 两个
+        GL_FLOAT,               // 每个元素是什么类型
+        GL_FALSE,               // 是否要单位化
+        sizeof(float) * 2,      // 每个buffer元素的长度
+        (const void*)0          // 当前attribute所在每个元素中的偏移量
+    );    
+
+
+	unsigned int indices[] = {
+		0, 1, 2,
+		2, 3, 0
+	};
+
+	unsigned int ibid;    // buffer id
+	glGenBuffers(1, &ibid);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibid);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indices, GL_STATIC_DRAW);
+
+
 
     ShadeProgramSource source = ParseShader("res/shaders/Basic.shader");
     //std::cout << "VERTEX:" << std::endl;
@@ -151,8 +165,7 @@ int main(void)
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT);
 
-
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);  // 这里必须是 UNSIGNED_INT
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
