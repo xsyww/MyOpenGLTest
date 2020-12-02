@@ -122,6 +122,10 @@ int main(void)
     if (!glfwInit())
         return -1;
 
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
     /* Create a windowed mode window and its OpenGL context */
     window = glfwCreateWindow(1024, 768, "Hello World", NULL, NULL);
     if (!window)
@@ -147,14 +151,17 @@ int main(void)
         -0.5f,  0.5f,
     };
 
+    unsigned int vao;
+    GLCall(glGenVertexArrays(1, &vao));
+    GLCall(glBindVertexArray(vao));
+
     unsigned int vbid;    // buffer id
     GLCall(glGenBuffers(1, &vbid));
-    GLCall(glBindBuffer(GL_ARRAY_BUFFER, vbid));
-    GLCall(glBufferData(GL_ARRAY_BUFFER, 6 * 2 * sizeof(float), positions, GL_STATIC_DRAW));
+	GLCall(glBindBuffer(GL_ARRAY_BUFFER, vbid));
+	GLCall(glBufferData(GL_ARRAY_BUFFER, 4 * 2 * sizeof(float), positions, GL_STATIC_DRAW));
 
-    GLCall(glEnableVertexAttribArray(0));   // 启用attrbute
-    GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, (const void*)0));
-
+	GLCall(glEnableVertexAttribArray(0));   // 启用attrbute
+	GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, (const void*)0));
 
 	unsigned int indices[] = {
 		0, 1, 2,
@@ -166,15 +173,18 @@ int main(void)
     GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibid));
     GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indices, GL_STATIC_DRAW));
 
-
-
     ShadeProgramSource source = ParseShader("res/shaders/Basic.shader");
 	unsigned int shader = CreateShader(source.VertexSource, source.FragmentSource);
     GLCall(glUseProgram(shader));
 
     GLCall(int colorParameterLocation = glGetUniformLocation(shader, "u_Color"));
     ASSERT(colorParameterLocation != -1);
-    GLCall(glUniform4f(colorParameterLocation, 0.8f, 0.3f, 0.8f, 1.0f));
+
+    // unbind all
+    GLCall(glBindVertexArray(0));
+    GLCall(glUseProgram(0));
+    GLCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
+    GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
 
     float r = 0.0f;
@@ -185,7 +195,20 @@ int main(void)
         /* Render here */
         GLCall(glClear(GL_COLOR_BUFFER_BIT));
 
+        GLCall(glUseProgram(shader));
         GLCall(glUniform4f(colorParameterLocation, r, 0.3f, 0.8f, 1.0f));
+
+        //GLCall(glBindBuffer(GL_ARRAY_BUFFER, vbid));
+
+        // 一下的两句必须每次设置，因为渲染多个物体时，可能会发生改变。
+		//GLCall(glEnableVertexAttribArray(0));   // 启用attrbute
+		//GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, (const void*)0));
+
+        GLCall(glBindVertexArray(vao));
+
+        GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibid));
+
+
         GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));  // 这里必须是 UNSIGNED_INT
 
         if (r > 1.0f)
