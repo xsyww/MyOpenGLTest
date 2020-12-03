@@ -1,7 +1,6 @@
 #include "Texture.h"
 #include <GL/glew.h>
 #include "Renderer.h"
-
 #include "vendor/stb_image/stb_image.h"
 
 Texture::Texture(const std::string& path)
