@@ -1,4 +1,7 @@
 #include <GL/glew.h>
+#include "vendor/imgui/imgui.h"
+#include "vendor/imgui/imgui_impl_glfw.h"
+#include "vendor/imgui/imgui_impl_opengl3.h"
 #include <GLFW/glfw3.h>
 
 #include <iostream>
@@ -45,7 +48,7 @@ int main(void)
     if (glewInit() != GLEW_OK)
         std::cout << "Error!" << std::endl;
 
-    std::cout << "Program runs in openGL with version: " <<  glGetString(GL_VERSION) << std::endl;
+    std::cout << "OpenGL: " <<  glGetString(GL_VERSION) << std::endl;
 
     {   // 这个作用域用来确保 vb，vi可以在 glfwTerminate() 之前释放掉
         float positions[] = {
@@ -76,13 +79,11 @@ int main(void)
 
         glm::mat4 proj = glm::ortho(0.0f, 960.0f, 0.0f, 540.0f, -1.0f, 1.0f);
         glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(-100, 0, 0));
-        glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(200, 200, 0));
-        glm::mat4 mvp = proj * view * model;
+        glm::vec3 translation(200, 200, 0);
 
         Shader shader("res/shaders/Basic.shader");
         shader.Bind();
         shader.SetUniform4f("u_Color", 0.8f, 0.3f, 0.8f, 1.0f);
-        shader.SetUniformMat4f("u_MVP", mvp);
 
 		Texture texture("res/textures/space.png");
 		texture.Bind();
@@ -96,6 +97,12 @@ int main(void)
 
         Renderer renderer;
 
+		ImGui::CreateContext();
+		ImGui_ImplGlfw_InitForOpenGL(window, true);
+		ImGui_ImplOpenGL3_Init("#version 130");
+
+
+        float f = 0.0f;
         float r = 0.0f;
         float increment = 0.05f;
         /* Loop until the user closes the window */
@@ -103,22 +110,40 @@ int main(void)
         {
             renderer.Clear();
 
-            shader.Bind();
-            shader.SetUniform4f("u_Color", r, 0.3f, 0.8f, 1.0f);
+			shader.Bind();
+			shader.SetUniform4f("u_Color", r, 0.3f, 0.8f, 1.0f);
 
-            renderer.Draw(va, ib, shader);
+			glm::mat4 model = glm::translate(glm::mat4(1.0f), translation);
+			glm::mat4 mvp = proj * view * model;
+            shader.SetUniformMat4f("u_MVP", mvp);
 
-            if (r > 1.0f)
-                increment = -0.05f;
-            else if (r < 0.0f)
-                increment = 0.05f;
+			renderer.Draw(va, ib, shader);
 
-            r += increment;
+			if (r > 1.0f) increment = -0.05f;
+			else if (r < 0.0f) increment = 0.05f;
+			r += increment;
+
+			ImGui_ImplOpenGL3_NewFrame();
+			ImGui_ImplGlfw_NewFrame();
+			ImGui::NewFrame();
+
+            //ImGui::Begin("My Window");
+    		ImGui::SliderFloat3("Translation", &translation.x, 0.0f, 960.0f); 
+    		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+			//ImGui::End();
+
+			ImGui::Render();
+			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
             /* Swap front and back buffers */
             glfwSwapBuffers(window);
             glfwPollEvents();
         }
+
+
+		ImGui_ImplOpenGL3_Shutdown();
+		ImGui_ImplGlfw_Shutdown();
+		ImGui::DestroyContext();
     };
 
     glfwTerminate();
