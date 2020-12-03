@@ -1,5 +1,6 @@
 #include <GL/glew.h>
 #include "VertexArray.h"
+#include "VertexBufferLayout.h"
 #include "Renderer.h"
 
 VertexArray::VertexArray()
