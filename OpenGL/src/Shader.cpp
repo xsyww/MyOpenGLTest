@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <GL/glew.h>
 
 #include "Renderer.h"
 
@@ -26,6 +27,16 @@ void Shader::Bind() const
 void Shader::Unbind() const
 {
 	GLCall(glUseProgram(0));
+}
+
+void Shader::SetUniform1i(const std::string& name, int value)
+{
+	GLCall(glUniform1i(GetUniformLocation(name), value));
+}
+
+void Shader::SetUniform1f(const std::string& name, float value)
+{
+	GLCall(glUniform1f(GetUniformLocation(name), value));
 }
 
 void Shader::SetUniform4f(const std::string& name, float v0, float v1, float v2, float v3)

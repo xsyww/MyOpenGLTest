@@ -13,6 +13,7 @@
 #include "VertexBufferLayout.h"
 #include "VertexArray.h"
 #include "Shader.h"
+#include "Texture.h"
 
 int main(void)
 {
@@ -26,7 +27,7 @@ int main(void)
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(1024, 768, "Hello World", NULL, NULL);
+    window = glfwCreateWindow(1024, 1024, "Hello World", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -45,10 +46,10 @@ int main(void)
 
     {   // 这个作用域用来确保 vb，vi可以在 glfwTerminate() 之前释放掉
         float positions[] = {
-            -0.5f, -0.5f,
-             0.5f, -0.5f,
-             0.5f,  0.5f,
-            -0.5f,  0.5f,
+            -0.5f, -0.5f, 0.0f, 0.0f,   // 左下
+             0.5f, -0.5f, 1.0f, 0.0f,   // 右下
+             0.5f,  0.5f, 1.0f, 1.0f,   // 右上
+            -0.5f,  0.5f, 0.0f, 1.0f,   // 左上
         };
 
         unsigned int indices[] = {
@@ -56,10 +57,15 @@ int main(void)
             2, 3, 0
         };
 
+        // 下面两句用来启用贴图透明，在我的电脑上好像不执行也可以。。。。。
+        GLCall(glEnable(GL_BLEND));
+        GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+
         VertexArray va;
-        VertexBuffer vb(positions, 4 * 2 * sizeof(float));
+        VertexBuffer vb(positions, 4 * 4 * sizeof(float));
 
         VertexBufferLayout layout;
+        layout.Push<float>(2);
         layout.Push<float>(2);
         va.AddBuffer(vb, layout);
 
@@ -69,6 +75,10 @@ int main(void)
         Shader shader("res/shaders/Basic.shader");
         shader.Bind();
         shader.SetUniform4f("u_Color", 0.8f, 0.3f, 0.8f, 1.0f);
+
+        Texture texture("res/textures/space.png");
+        texture.Bind();
+        shader.SetUniform1i("u_Texture", 0);
 
         // unbind all
         va.Unbind();
@@ -96,7 +106,6 @@ int main(void)
                 increment = 0.05f;
 
             r += increment;
-
 
             /* Swap front and back buffers */
             glfwSwapBuffers(window);
