@@ -10,18 +10,8 @@
 #include "vendor/imgui/imgui_impl_glfw.h"
 #include "vendor/imgui/imgui_impl_opengl3.h"
 
-#include "vendor/glm/glm.hpp"
-#include "vendor/glm/gtc/matrix_transform.hpp"
-
-#include "Renderer.h"
-#include "VertexBuffer.h"
-#include "IndexBuffer.h"
-#include "VertexBufferLayout.h"
-#include "VertexArray.h"
-#include "Shader.h"
-#include "Texture.h"
-
 #include "tests/TestClearColor.h"
+#include "tests/TestTexture2D.h"
 
 int main(void)
 {
@@ -42,8 +32,6 @@ int main(void)
 		return -1;
 	}
 
-	glewInit();
-
 	glfwMakeContextCurrent(window);
 	glfwSwapInterval(1);
 
@@ -52,11 +40,8 @@ int main(void)
 
 	std::cout << "OpenGL: " << glGetString(GL_VERSION) << std::endl;
 
-
 	GLCall(glEnable(GL_BLEND));
 	GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
-
-	Renderer renderer;
 
 	ImGui::CreateContext();
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -67,11 +52,12 @@ int main(void)
 	currentTest = testMenu;
 
 	testMenu->RegisterTest<test::TestClearColor>("Clear Color");
+	testMenu->RegisterTest<test::TestTexture2D>("2D Texture");
 
 	while (!glfwWindowShouldClose(window))
 	{
 		GLCall(glClearColor(0.0f, 0.0f, 0.0f, 1.0f));
-		renderer.Clear();
+		GLCall(glClear(GL_COLOR_BUFFER_BIT));
 
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
@@ -107,7 +93,7 @@ int main(void)
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
 
-
+	glfwDestroyWindow(window);
 	glfwTerminate();
 	return 0;
 }
