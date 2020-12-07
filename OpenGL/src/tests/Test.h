@@ -10,12 +10,18 @@ namespace test
 	class Test
 	{
 	public:
-		Test() {}
+		Test();
 		virtual ~Test() {}
 
 		virtual void OnUpdate(float deltaTime) {}
 		virtual void OnRender() {}
 		virtual void OnImGuiRender() {}
+
+		inline std::string GetName() const { return m_Name; }
+		void SetName(const std::string& name);
+
+	private: 
+		std::string m_Name;
 	};
 
 
@@ -30,7 +36,7 @@ namespace test
 		void RegisterTest(const std::string& name)
 		{
 			std::cout << "Registering test " << name << std::endl;
-			m_Tests.push_back(std::make_pair(name, []() { return new T(); }));
+			m_Tests.push_back(std::make_pair(name, [&]() { T* obj = new T(); obj->SetName(name); return obj; }));
 		}
 
 	private: 

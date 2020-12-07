@@ -47,12 +47,16 @@ int main(void)
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init("#version 130");
 
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.Fonts->AddFontFromFileTTF("res/fonts/simfang.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
+	//ImGui::font
+
 	test::Test* currentTest = nullptr;
 	test::TestMenu* testMenu = new test::TestMenu(currentTest);
 	currentTest = testMenu;
 
-	testMenu->RegisterTest<test::TestClearColor>("Clear Color");
-	testMenu->RegisterTest<test::TestTexture2D>("2D Texture");
+	testMenu->RegisterTest<test::TestClearColor>(u8"Çå³ıÉ«");
+	testMenu->RegisterTest<test::TestTexture2D>(u8"2DÎÆÀí");
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -67,12 +71,14 @@ int main(void)
 		{
 			currentTest->OnUpdate(0.0f);
 			currentTest->OnRender();
-			ImGui::Begin("Test");
+
+			ImGui::Begin(u8"²âÊÔ");
 			if (currentTest != testMenu && ImGui::Button("<-"))
 			{
 				delete currentTest;
 				currentTest = testMenu;
 			}
+
 			currentTest->OnImGuiRender();
 			ImGui::End();
 		}

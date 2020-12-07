@@ -3,6 +3,17 @@
 
 namespace test
 {
+	Test::Test()
+		:m_Name(u8"")
+	{
+
+	}
+
+	void Test::SetName(const std::string& name)
+	{
+		m_Name = name;
+	}
+
 	TestMenu::TestMenu(Test*& currentTestPointer)
 		: m_CurrentTest(currentTestPointer)
 	{
