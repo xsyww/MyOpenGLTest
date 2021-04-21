@@ -1,0 +1,2 @@
+E:/TestProject/CppProject/ConsoleApplication1/OpenGL/src/vendor/glm/out/build/x64-Debug (default)/CMakeFiles/edit_cache.dir
+E:/TestProject/CppProject/ConsoleApplication1/OpenGL/src/vendor/glm/out/build/x64-Debug (default)/CMakeFiles/rebuild_cache.dir

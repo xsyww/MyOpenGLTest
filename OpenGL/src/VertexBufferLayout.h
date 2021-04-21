@@ -11,7 +11,7 @@ struct VertexBufferElement
 	unsigned char normalized;
 
 	unsigned int GetSizeOfType() const { return GetSizeOfType(type); }
-
+	 
 	static unsigned int GetSizeOfType(unsigned int type)
 	{
 		switch (type)
